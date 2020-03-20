@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>服务器管理</title>
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/api.js"></script>
+    <style type="text/css" >
+        .nav-form {
+            margin: 5px 0px 5px 0px;
+        }
+        .labelDiv {
+            width: 25%;
+            text-align: right;
+            display: inline-block;
+        }
+       .ic {
+          width: 65%;
+       }
+    </style>
+    <script type="text/javascript">
+        $(function(){
+
+
+        });
+
+        function connect() {alert(JSON.stringify(new FormData(document.getElementById("remoteForm"))));
+            var formData = new FormData(document.getElementById("remoteForm"));
+            $.ajax({
+                url: connectUrl,
+                type: "post",
+                data: formData,
+                success: function(data) {
+                    alert(JSON.stringify(data));
+                }
+            });
+
+        }
+
+    </script>
+</head>
+<body>
+    <div style="width: 100%">
+        <div style="width: 24%;height: 600px;border: 1px solid red;display: inline-block;float: left;">
+            <form id="remoteForm" action="#" method="post">
+                <div class="nav-form">
+                    <div class="labelDiv">
+                        <label>主机ip：</label>
+                    </div>
+                    <input type="text" name="host" class="ic"/>
+                </div>
+                <div class="nav-form">
+                    <div class="labelDiv">
+                        <label>端口：</label>
+                    </div>
+                    <input type="text" name="port" class="ic"/>
+                </div>
+                <div class="nav-form">
+                    <div class="labelDiv">
+                        <label>用户名：</label>
+                    </div>
+                    <input type="text" name="userName" class="ic"/>
+                </div>
+                <div class="nav-form">
+                    <div class="labelDiv">
+                        <label>密码：</label>
+                    </div>
+                    <input type="text" name="password" class="ic"/>
+                </div>
+                <div style="width: 100%;text-align: center;">
+                    <input type="button" value="连接" style="margin-right: 10px;" onclick="connect();"/>
+                    <input type="button" value="断开"/>
+                </div>
+            </form>
+        </div>
+        <div style="width: 75%;height: 600px;border: 1px solid red;display: inline-block;">
+            <form action="#" method="post">
+                <div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
