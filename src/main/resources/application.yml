@@ -1,5 +1,5 @@
 server:
-  port: 6069
+  port: 8806
 spring:
   application:
     name: project_manager
@@ -18,4 +18,12 @@ spring:
     suffix: .html
     servlet:
       content-type: text/html
+  servlet:
+    multipart:
+      max-file-size: 248MB
+      max-request-size: 248MB
 
+remote:
+  localLinuxPath: /opt/tem
+  localWinPath: D:/tem
+  sginKey:

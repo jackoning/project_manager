@@ -7,7 +7,7 @@ import ch.ethz.ssh2.StreamGobbler;
 import com.sinyun.server.commons.ssh2.exception.Ssh2Exception;
 
 import java.io.*;
-import java.util.UUID;
+import java.util.Date;
 
 /**
  * @author gongwenjun
@@ -15,8 +15,6 @@ import java.util.UUID;
 public class RemoteSession {
 
     private String sessionId;
-
-    private Session session;
 
     private SCPClient scpClient;
 
@@ -30,24 +28,28 @@ public class RemoteSession {
 
     private String msg;
 
+    private Date passDue;
+
     public RemoteSession () {
         this.charSet = "utf-8";
-        this.sessionId = UUID.randomUUID().toString().replace("-", "");
+    }
+
+    public Date getPassDue() {
+        return passDue;
+    }
+
+    public void setPassDue(Date currTime) {
+        long time = currTime.getTime() + (30 * 1000 * 1000);
+        currTime.setTime(time);
+        this.passDue = currTime;
     }
 
     public String getSessionId() {
         return sessionId;
     }
 
-    public Session getSession() {
-        if (null != connection && null == session) {
-            try {
-                session = connection.openSession();
-            } catch (IOException e) {
-                this.msg = "打开会话失败！" + e.getMessage();
-            }
-        }
-        return session;
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 
     public SCPClient getScpClient() {
@@ -107,7 +109,7 @@ public class RemoteSession {
         InputStream  stdout = new StreamGobbler(getResultIO());
         StringBuffer buffer = new StringBuffer();
         try {
-            buffer.append("stdout> ");
+            buffer.append("stdout>");
             BufferedReader br = new BufferedReader(new InputStreamReader(stdout, getCharSet()));
             String line;
             while((line=br.readLine()) != null){

@@ -10,75 +10,268 @@
             margin: 5px 0px 5px 0px;
         }
         .labelDiv {
-            width: 25%;
+            width: 26%;
             text-align: right;
             display: inline-block;
         }
        .ic {
-          width: 65%;
+          width: 60%;
        }
+       #logNav {
+           width: 100%;
+           white-space: normal;
+        }
+       td {
+           border:1px solid #CCCCCC;
+       }
+        pre {
+            white-space: pre-wrap; /*css-3*/
+            white-space: -moz-pre-wrap; /*Mozilla,since1999*/
+            white-space: -o-pre-wrap; /*Opera7*/
+            word-wrap: break-word; /*InternetExplorer5.5+*/
+        }
     </style>
     <script type="text/javascript">
         $(function(){
+            $("#showBtn").on("click", function () {
+               var str = $("#showBtn").attr("value");
+               if ("隐藏" == str) {
+                   $("#showBtn").attr("value", "添加");
+                   $("#remoteAddNav").css("display", "none");
+                   $("#contentNav").css("width", "100%");
+                }else {
+                   $("#showBtn").attr("value", "隐藏");
+                   $("#remoteAddNav").css("display", "");
+                   $("#contentNav").css("width", "75%");
+               }
 
+            });
+            $("#logNavContent").css("max-height", (document.body.offsetHeight - 100) + "px");
 
-        });
-
-        function connect() {alert(JSON.stringify(new FormData(document.getElementById("remoteForm"))));
-            var formData = new FormData(document.getElementById("remoteForm"));
-            $.ajax({
-                url: connectUrl,
-                type: "post",
-                data: formData,
-                success: function(data) {
-                    alert(JSON.stringify(data));
+            $.get(queryListRemoteUrl, {}, function (res) {
+                if (200 == res.code){
+                    var d = res.data;
+                    var len = d.length;
+                    var str = '';
+                    for (var i=0; i < len; i++) {
+                        str += '<tr><td>' + (i +1) + '</td><td>' + d[i].projectName + '</td>';
+                        str += '<td>' + d[i].projectAlias + '</td>';
+                        str += '<td>' + d[i].type + '</td>';
+                        str += '<td>' + d[i].host + '</td>';
+                        str += '<td>' + d[i].userName + '</td>';
+                        str += '<td><input type="button" value="上传文件" style="margin-right: 10px;" key="' + d[i].id + '" onclick="showUpload(this)"/>';
+                        /*str += '<input type="button" value="断开" style="margin-right: 10px;" onclick="return;"/>';*/
+                        str += '<input type="button" value="启动" style="margin-right: 10px;" key="' + d[i].id + '" onclick="run(this)"/>';
+                        str += '<input type="button" value="显示日志" style="margin-right: 10px;" key="' + d[i].id + '"  onclick="viewLog(this)"/>';
+                        str += '<input type="button" value="删除" style="margin-right: 10px;" key="' + d[i].id + '"  onclick="delete(this)"/></td></tr>';
+                    }
+                    $("#remoteNav").html(str);
                 }
             });
+        });
 
+        function uploadLocal() {
+            $.ajax({
+                url: localUploadUrl,
+                type: "post",
+                data: new FormData(document.getElementById("uploadForm")),
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    if (200 == res.code) {
+                        alert("上传成功！")
+                    }
+                }
+            });
         }
 
+        function showUpload(obj) {
+            show(1, 0, 0);
+            $("#uploadId").val($(obj).attr("key"));
+        }
+
+        function backTable() {
+            show(0, 1, 0);
+        }
+
+        function run(obj) {
+            show(0, 0, 1);
+            var id = $(obj).attr("key");
+            $.ajax({
+                url: runUrl,
+                type: "post",
+                data: {"id": id},
+                success: function(res) {
+                    if (200 == res.code) {
+                        $("#logNav pre").html(res.data);
+                    }
+                }
+            });
+        }
+
+        function viewLog(obj) {
+            show(0, 0, 1);
+            var id = $(obj).attr("key");
+            $.get(viewLogUrl, {"id": id}, function (res) {
+                if (200 == res.code) {
+                    $("#logNav pre").html(res.data);
+                }
+            })
+        }
+
+        function deleteNode(obj) {
+            var id = $(obj).attr("key");
+            $.get(deleteUrl, {"id": id}, function (res) {
+                if (200 == res.code) {
+                    alert(res.msg);
+                }
+            })
+        }
+
+        function save() {
+            $.ajax({
+                url: saveUrl,
+                type: "post",
+                data: formDataToJson("remoteForm"),
+                processData: false,
+                contentType: "application/json;charset=UTF-8",
+                success: function(res) {
+                    if (200 == res.code) {
+                        alert("保存成功！")
+                    }
+                }
+            });
+        }
+
+        function formDataToJson(id) {
+            var formData = new FormData(document.getElementById(id));
+            var jsonData = {};
+            formData.forEach((val, key) => jsonData[key] = val);
+            return JSON.stringify(jsonData);
+        }
+
+        function show(un, sln, ln){
+            if (un == 1) {
+                $("#uploadNav").css("display", "")
+            } else {
+                $("#uploadNav").css("display", "none")
+            }
+            if (sln == 1) {
+                $("#serverListNav").css("display", "")
+            } else {
+                $("#serverListNav").css("display", "none")
+            }
+            if (ln == 1) {
+                $("#logNav").css("display", "")
+            } else {
+                $("#logNav").css("display", "none")
+            }
+        }
     </script>
 </head>
 <body>
     <div style="width: 100%">
-        <div style="width: 24%;height: 600px;border: 1px solid red;display: inline-block;float: left;">
+        <div id="remoteAddNav" style="width: 24%;height: 600px;border: 1px solid red;display: inline-block;float: left;padding-right: 1px;display: none;">
             <form id="remoteForm" action="#" method="post">
-                <div class="nav-form">
-                    <div class="labelDiv">
-                        <label>主机ip：</label>
-                    </div>
-                    <input type="text" name="host" class="ic"/>
+            <div style="width: 100%; text-align: center;margin-bottom: 20px;">
+                远程主机
+            </div>
+            <div class="nav-form">
+                <div class="labelDiv">
+                    <label>项目名称：</label>
                 </div>
-                <div class="nav-form">
-                    <div class="labelDiv">
-                        <label>端口：</label>
-                    </div>
-                    <input type="text" name="port" class="ic"/>
+                <input type="text" name="projectName" class="ic"/>
+            </div>
+            <div class="nav-form">
+                <div class="labelDiv">
+                    <label>项目别名：</label>
                 </div>
-                <div class="nav-form">
-                    <div class="labelDiv">
-                        <label>用户名：</label>
-                    </div>
-                    <input type="text" name="userName" class="ic"/>
+                <input type="text" name="projectAlias" class="ic"/>
+            </div>
+            <div class="nav-form">
+                <div class="labelDiv">
+                    <label>项目类型：</label>
+                 </div>
+                 <input type="text" name="type" class="ic"/>
+            </div>
+            <div class="nav-form">
+                <div class="labelDiv">
+                    <label>主机ip：</label>
                 </div>
-                <div class="nav-form">
-                    <div class="labelDiv">
-                        <label>密码：</label>
-                    </div>
-                    <input type="text" name="password" class="ic"/>
+                <input type="text" name="host" class="ic"/>
+            </div>
+            <div class="nav-form">
+                <div class="labelDiv">
+                    <label>端口：</label>
                 </div>
-                <div style="width: 100%;text-align: center;">
-                    <input type="button" value="连接" style="margin-right: 10px;" onclick="connect();"/>
-                    <input type="button" value="断开"/>
+                <input type="text" name="port" class="ic"/>
+            </div>
+            <div class="nav-form">
+                <div class="labelDiv">
+                    <label>用户名：</label>
                 </div>
-            </form>
+                <input type="text" name="userName" class="ic"/>
+            </div>
+            <div class="nav-form">
+                <div class="labelDiv">
+                    <label>密码：</label>
+                </div>
+                <input type="text" name="password" class="ic"/>
+            </div>
+            <div style="width: 100%;text-align: center;">
+                <input type="button" value="保存" style="margin-right: 10px;" onclick="save();"/>
+            </div>
+        </form>
         </div>
-        <div style="width: 75%;height: 600px;border: 1px solid red;display: inline-block;">
-            <form action="#" method="post">
-                <div>
-
+        <div id="contentNav" style="width: 100%;height: 600px;border: 1px solid red;display: inline-block;">
+            <div style="width: 100px;padding: 5px;">
+                <input type="button" id="showBtn" value="添加">
+            </div>
+            <div id="uploadNav" style="width: 100%;display: none;">
+                <form id="uploadForm" action="#" method="post" enctype="multipart/form-data">
+                    <div style="width: 100%; text-align: center;margin-bottom: 20px;">
+                        文件上传
+                    </div>
+                    <input type="hidden" id="uploadId" name="id" />
+                    <div class="nav-form" style="text-align: center;">
+                        <div style="display: inline-block;">
+                            <label>文件：</label>
+                        </div>
+                        <input type="file" name="multipartFile" class="ic" style="width: 300px;"/>
+                    </div>
+                    <div style="width: 100%;text-align: center;margin-top: 20px;">
+                        <input type="button" value="上传" style="margin-right: 10px;" onclick="uploadLocal();"/>
+                        <input type="button" value="返回" onclick="backTable();"/>
+                    </div>
+                </form>
+            </div>
+            <div id="logNav" style="display: none;">
+                <div id="logNavContent" style="width: 80%; margin: 0 auto;overflow-y: auto;">
+                    <pre>
+                    </pre>
                 </div>
-            </form>
+                <div style="width: 100%;text-align: center;margin-top: 20px;">
+                    <input type="button" value="返回" onclick="backTable();"/>
+                </div>
+            </div>
+            <div id="serverListNav" style="width: 100%; text-align: center;">
+                <table style="width: 98%;margin: 5px; border: 1px solid black;" cellpadding="0" cellspacing="0">
+                    <thead>
+                      <tr>
+                          <td style="width: 60px;">序号</td>
+                          <td>项目名称</td>
+                          <td>项目别名</td>
+                          <td>类型</td>
+                          <td>主机ip</td>
+                          <td>用户名</td>
+                          <td style="width: 300px;">操作</td>
+                      </tr>
+                    </thead>
+                    <tbody id="remoteNav">
+
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </body>

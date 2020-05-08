@@ -2,15 +2,11 @@ package com.sinyun.server.controller;
 
 
 import com.sinyun.server.entity.DataModel;
+import com.sinyun.server.entity.RemoteServer;
 import com.sinyun.server.service.RemoteOperateService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
-import java.io.IOException;
 
 @RestController
 @RequestMapping("remoteOperate")
@@ -30,40 +26,53 @@ public class RemoteOperateController {
     private RemoteOperateService remoteOperateService;
 
 
-    @PostMapping("/connect")
-    public DataModel connect(){
-        return remoteOperateService.connect();
+    @PostMapping("/save")
+    public DataModel save(@RequestBody RemoteServer remoteServer){
+        return remoteOperateService.save(remoteServer);
     }
 
-    @PostMapping("/execute")
-    DataModel execute(String sessionId, String cmd) {
-        return remoteOperateService.execute(sessionId, cmd);
+    @PostMapping("/run")
+    public DataModel run(String id){
+        return remoteOperateService.run(id);
     }
 
-    @PostMapping("/download")
+    //@GetMapping("/connect")
+    public DataModel connect(String id){
+        return remoteOperateService.connect(id);
+    }
+
+    //@PostMapping("/execute")
+    DataModel execute(String id, String cmd) {
+        return remoteOperateService.execute(id, cmd);
+    }
+
+    //@PostMapping("/download")
     DataModel download (String sessionId, String localPath, String remotePath) {
         return remoteOperateService.download (sessionId, localPath, remotePath);
     }
 
-    @PostMapping("/uploadRemote")
+    //@PostMapping("/uploadRemote")
     DataModel uploadRemote (String sessionId, String localPath, String remotePath){
         return remoteOperateService.upload(sessionId, localPath, remotePath);
     }
 
     @PostMapping("/uploadLocal")
-    DataModel uploadLocal (String sessionId, String localPath, String remotePath, MultipartFile multipartFile){
-        DataModel dm = DataModel.success();
-        String name = multipartFile.getOriginalFilename();
-        String path = localPath + File.separator + name;
-        File file = new File(path);
-        try {
-            multipartFile.transferTo(file);
-            dm.setData(true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return DataModel.error();
+    DataModel uploadLocal (String id, String remotePath, MultipartFile multipartFile){
+       return remoteOperateService.uploadLocal(id, remotePath, multipartFile);
     }
 
+    @GetMapping("/delete")
+    public DataModel delete(String id){
+        return remoteOperateService.delete(id);
+    }
 
+    @GetMapping("/viewLog")
+    public DataModel viewLog(String id){
+        return remoteOperateService.viewLog(id);
+    }
+
+    @GetMapping("/queryList")
+    public DataModel queryList(){
+        return remoteOperateService.queryList();
+    }
 }

@@ -1,9 +1,7 @@
 package com.sinyun.server.commons.ssh2;
 
-import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.SCPClient;
 import ch.ethz.ssh2.Session;
-import com.sinyun.server.commons.ssh2.entity.ConnectInfo;
 import com.sinyun.server.commons.ssh2.entity.RemoteSession;
 import com.sinyun.server.commons.ssh2.exception.Ssh2Exception;
 
@@ -14,6 +12,8 @@ import java.io.*;
  */
 public class RemoteOperateUtil {
 
+    private static final String[] commonds = {"tail ", "cat "};
+
     /**
      * 执行命名
      * @param sessionId
@@ -21,17 +21,31 @@ public class RemoteOperateUtil {
      * @return 结果
      */
     public static String execute(String sessionId, String cmd) {
+        if (!RemoteConnectUtil.isConnect(sessionId)){
+            return Constant.COMMAND_RUN_FAILE;
+        }
         RemoteSession rs = takeRemoteSession(sessionId);
         if (null != rs) {
-            Session session = rs.getSession();
-            if (null != session) {
-                try {
-                    session.execCommand(cmd);
-                    rs.setResultIO(session.getStdout());
+            Session session = null;
+            try {
+                cmd = doConnand(cmd, sessionId);
+                session = rs.getConnection().openSession();
+                System.out.println("打开会话，执行命令：" + cmd);
+                session.execCommand(cmd);
+                rs.setResultIO(session.getStdout());
+                String str = rs.getResult();
+                if (null == str || str.length() < 8){
+                    rs.setResultIO(session.getStderr());
                     return rs.getResult();
-                } catch (IOException e) {
-                    rs.setMsg("执行命令失败！" + e.getMessage());
-                    throw new Ssh2Exception("执行命令失败！", e);
+                }else {
+                    return str;
+                }
+            } catch (IOException e) {
+                rs.setMsg(Constant.COMMAND_RUN_FAILE + e.getMessage());
+                throw new Ssh2Exception(Constant.COMMAND_RUN_FAILE, e);
+            }finally {
+                if (null != session) {
+                    session.close();
                 }
             }
         }
@@ -45,6 +59,9 @@ public class RemoteOperateUtil {
      * @param remotePath
      */
     public static boolean upload(String sessionId, String localPath, String remotePath){
+        if (!RemoteConnectUtil.isConnect(sessionId)){
+            return false;
+        }
         RemoteSession rs = takeRemoteSession(sessionId);
         boolean flag = false;
         if (null != rs) {
@@ -73,6 +90,9 @@ public class RemoteOperateUtil {
      * @param remotePath
      */
     public static boolean download(String sessionId, String localPath, String remotePath){
+        if (!RemoteConnectUtil.isConnect(sessionId)){
+            return false;
+        }
         RemoteSession rs = takeRemoteSession(sessionId);
         boolean flag = false;
         if (null != rs) {
@@ -89,40 +109,8 @@ public class RemoteOperateUtil {
         return false;
     }
 
-    public static String  localFile(String path, String name, InputStream input) {
-        String filePath = path + File.separator + name;
-        FileOutputStream output = null;
-        try {
-            output = new FileOutputStream(filePath);
-            byte[] bytes = new byte[2048];
-            int len;
-            while ((len = input.read(bytes)) != -1) {
-                output.write(bytes, 0, len);
-            }
-            return filePath;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }finally {
-            if (null != input) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (null != output) {
-                try {
-                    output.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return "";
-    }
-
     public static RemoteSession takeRemoteSession(String sessionId) {
-        RemoteSession rs = CacheManager.get(sessionId, RemoteSession.class);
+        RemoteSession rs = CacheManager.get(Constant.KEY_SESSION + sessionId, RemoteSession.class);
         if (null == rs) {
             throw new Ssh2Exception("未获RemoteSession取到信息！");
         }
@@ -135,5 +123,19 @@ public class RemoteOperateUtil {
             return true;
         }
         return false;
+    }
+
+    private static String doConnand(String cmd, String sessionId){
+        boolean isOpen = true;
+        for (String str : commonds) {
+            if (cmd.contains(str)) {
+                isOpen = false;
+                break;
+            }
+        }
+        if (isOpen) {
+            cmd += ">/opt/tem/" + sessionId + ".log && tail -n 100 /opt/tem/" + sessionId + ".log";
+        }
+        return cmd;
     }
 }

@@ -7,21 +7,31 @@ import com.sinyun.server.commons.ssh2.exception.Ssh2Exception;
  */
 public class ConnectInfo {
 
-    private String host="125.72.14.166";
+    private String id;
 
-    private Integer port=22;
+    private String host;
 
-    private String userName="root";
+    private Integer port;
 
-    private String password="Guanli@2019";
+    private String userName;
 
-    private String winPath="D:/tem";
+    private String password;
 
-    private String linuxPath="/opt/tmp";
+    private String winPath;
+
+    private String linuxPath;
 
     private final String WINDOWS = "windows";
 
     private final String LINUX = "linux";
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getHost() {
         return host;
