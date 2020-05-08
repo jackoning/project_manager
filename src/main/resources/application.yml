@@ -26,4 +26,4 @@ spring:
 remote:
   localLinuxPath: /opt/tem
   localWinPath: D:/tem
-  sginKey:
+  sginKey: 123@qq.com

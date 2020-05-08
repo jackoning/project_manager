@@ -15,24 +15,22 @@ public class IndexController {
     @Value("${remote.sginKey}")
     private String sginKey;
 
-    @RequestMapping("/index")
-    public String index(){
-        return "/index";
-    }
-
     @RequestMapping("/sign")
     public String sign(){
         return "/sign";
     }
 
     @RequestMapping(value = "/verify", method = RequestMethod.POST)
-    public String verify(String sign){
+    public String verify(String sgin){
         try {
-            sign = new String(Base64Utils.decode(sign.getBytes("UTF-8")), "UTF-8");
-            System.out.println(sign);
+            sgin = new String(Base64Utils.decode(sgin.getBytes("UTF-8")), "UTF-8");
+            System.out.println(sgin);
+            if (sginKey.equals(sgin)) {
+                return "/index";
+            }
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return "/index";
+        return "/sign";
     }
 }

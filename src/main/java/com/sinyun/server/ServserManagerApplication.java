@@ -11,9 +11,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @EnableScheduling
 @SpringBootApplication
-public class ServserMaangerApplication {
+public class ServserManagerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ServserMaangerApplication.class);
+        SpringApplication.run(ServserManagerApplication.class);
     }
 }
